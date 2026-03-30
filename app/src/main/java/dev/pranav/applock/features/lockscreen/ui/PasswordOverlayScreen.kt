@@ -94,22 +94,7 @@ class PasswordOverlayActivity : FragmentActivity() {
         setupWindow()
         loadAppNameAndSetupUI()
     }
-
-    override fun onPostCreate(savedInstanceState: Bundle?) {
-        super.onPostCreate(savedInstanceState)
-        setupBiometricPromptInternal()
-    }
-
-    override fun onPostResume() {
-        super.onPostResume()
-        setupBiometricPromptInternal()
-        if (appLockRepository.isBiometricAuthEnabled()) {
-            triggerBiometricPrompt()
-        }
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
+      super.onConfigurationChanged(newConfig)
         Log.d(TAG, "Configuration changed - orientation: ${newConfig.orientation}")
     }
 
@@ -172,25 +157,7 @@ class PasswordOverlayActivity : FragmentActivity() {
                                 lockedAppName = appName,
                                 triggeringPackageName = triggeringPackageNameFromIntent,
                                 onPinAttempt = onPinAttemptCallback
-  
-        
-
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                super.onAuthenticationSucceeded(result)
-                isBiometricPromptShowingLocal = false
-                lockedPackageNameFromIntent?.let { pkgName ->
-                    AppLockManager.temporarilyUnlockAppWithBiometrics(pkgName)
-                    // Fix: Do NOT relaunch the app. Just finish the overlay to reveal the underlying activity.
-                    // This preserves the navigation stack/state of the locked app.
-                }
-                finishAfterTransition()
-            }
-        }
-
-    override fun onResume() {
-        super.onResume()
-        movedToBackground = false
-        AppLockManager.isLockScreenShown.set(true) // Set to true when activity is visible
+ AppLockManager.isLockScreenShown.set(true) // Set to true when activity is visible
         lifecycleScope.launch {
             applyUserPreferences()
         }
@@ -203,64 +170,18 @@ class PasswordOverlayActivity : FragmentActivity() {
             }
             if (window.decorView.isAttachedToWindow) {
                 windowManager.updateViewLayout(window.decorView, window.attributes)
-            }
-        }
-    }
-
-    fun triggerBiometricPrompt() {
-        if (appLockRepository.isBiometricAuthEnabled()) {
-            AppLockManager.reportBiometricAuthStarted()
-            isBiometricPromptShowingLocal = true
-            try {
-                biometricPrompt.authenticate(promptInfo)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error calling biometricPrompt.authenticate: ${e.message}", e)
-                isBiometricPromptShowingLocal = false
-                AppLockManager.reportBiometricAuthFinished()
-            }
-        }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        if (!isChangingConfigurations() && !isBiometricPromptShowingLocal && !movedToBackground) {
+         = false
+                
+{
             AppLockManager.isLockScreenShown.set(false)
-            AppLockManager.reportBiometricAuthFinished()
-            finish()
-        }
-    }
-
-    override fun onResumeFragments() {
-        super.onResumeFragments()
-        AppLockManager.isLockScreenShown.set(true)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        movedToBackground = true
-        AppLockManager.isLockScreenShown.set(false)
-        if (!isChangingConfigurations() && !isFinishing && !isDestroyed) {
-            AppLockManager.reportBiometricAuthFinished()
-            finish()
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        AppLockManager.isLockScreenShown.set(false)
-        AppLockManager.reportBiometricAuthFinished()
-        Log.d(TAG, "PasswordOverlayActivity onDestroy for $lockedPackageNameFromIntent")
-    }
-}
+  
 
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun PasswordOverlayScreen(
     modifier: Modifier = Modifier,
-    showBiometricButton: Boolean = false,
     fromMainActivity: Boolean = false,
-    onBiometricAuth: () -> Unit = {},
     onAuthSuccess: () -> Unit,
     lockedAppName: String? = null,
     triggeringPackageName: String? = null,
@@ -341,10 +262,9 @@ fun PasswordOverlayScreen(
                     KeypadSection(
                         passwordState = passwordState,
                         minLength = minLength,
-                        showBiometricButton = showBiometricButton,
+                        
                         fromMainActivity = fromMainActivity,
-                        onBiometricAuth = onBiometricAuth,
-                        onAuthSuccess = onAuthSuccess,
+                               onAuthSuccess = onAuthSuccess,
                         onPinAttempt = onPinAttempt,
                         onPasswordChange = {
                             showError = false
@@ -410,10 +330,8 @@ fun PasswordOverlayScreen(
                 KeypadSection(
                     passwordState = passwordState,
                     minLength = minLength,
-                    showBiometricButton = showBiometricButton,
                     fromMainActivity = fromMainActivity,
-                    onBiometricAuth = onBiometricAuth,
-                    onAuthSuccess = onAuthSuccess,
+                    
                     onPinAttempt = onPinAttempt,
                     onPasswordChange = {
                         showError = false
@@ -577,10 +495,6 @@ fun PasswordIndicators(
 fun KeypadSection(
     passwordState: MutableState<String>,
     minLength: Int,
-    showBiometricButton: Boolean,
-    fromMainActivity: Boolean = false,
-    onBiometricAuth: () -> Unit,
-    onAuthSuccess: () -> Unit,
     onPinAttempt: ((pin: String) -> Boolean)? = null,
     onPasswordChange: () -> Unit,
     onPinIncorrect: () -> Unit
