@@ -164,83 +164,16 @@ class PasswordOverlayActivity : FragmentActivity() {
                     finishAfterTransition()
                 }
             }
-            isValid
+            
         }
 
-        val onPatternAttemptCallback = { pattern: String ->
-            val isValid = appLockRepository.validatePattern(pattern)
-            if (isValid) {
-                lockedPackageNameFromIntent?.let { pkgName ->
-                    AppLockManager.unlockApp(pkgName)
-
-                    finishAfterTransition()
-                }
-            }
-            isValid
-        }
-
-        setContent {
-            AppLockTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    contentColor = MaterialTheme.colorScheme.primaryContainer
-                ) { innerPadding ->
-                    val lockType = remember { appLockRepository.getLockType() }
-                    when (lockType) {
-                        PreferencesRepository.LOCK_TYPE_PATTERN -> {
-                            PatternLockScreen(
-                                modifier = Modifier.padding(innerPadding),
-                                fromMainActivity = false,
-                                lockedAppName = appName,
-                                triggeringPackageName = triggeringPackageNameFromIntent,
-                                onPatternAttempt = onPatternAttemptCallback
-                            )
-                        }
-
-                        else -> {
-                            PasswordOverlayScreen(
-                                modifier = Modifier.padding(innerPadding),
-                                showBiometricButton = appLockRepository.isBiometricAuthEnabled(),
-                                fromMainActivity = false,
-                                onBiometricAuth = { triggerBiometricPrompt() },
+     
                                 onAuthSuccess = {},
                                 lockedAppName = appName,
                                 triggeringPackageName = triggeringPackageNameFromIntent,
                                 onPinAttempt = onPinAttemptCallback
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun setupBiometricPromptInternal() {
-        executor = ContextCompat.getMainExecutor(this)
-        biometricPrompt =
-            BiometricPrompt(this@PasswordOverlayActivity, executor, authenticationCallbackInternal)
-
-        val appNameForPrompt = appName.ifEmpty { getString(R.string.this_app) }
-        promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(getString(R.string.unlock_app_title, appNameForPrompt))
-            .setSubtitle(getString(R.string.confirm_biometric_subtitle))
-            .setNegativeButtonText(getString(R.string.use_pin_button))
-            .setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                        BiometricManager.Authenticators.BIOMETRIC_STRONG
-            )
-            .setConfirmationRequired(false)
-            .build()
-    }
-
-    private val authenticationCallbackInternal =
-        object : BiometricPrompt.AuthenticationCallback() {
-            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                super.onAuthenticationError(errorCode, errString)
-                isBiometricPromptShowingLocal = false
-                AppLockManager.reportBiometricAuthFinished()
-                Log.w(TAG, "Authentication error: $errString ($errorCode)")
-            }
+  
+        
 
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 super.onAuthenticationSucceeded(result)
