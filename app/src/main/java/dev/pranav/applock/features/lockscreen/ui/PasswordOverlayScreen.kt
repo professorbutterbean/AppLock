@@ -185,46 +185,6 @@ private fun setupUI() {
         }
     }
 }
-    
-    private fun setupBiometricPromptInternal() {
-        executor = ContextCompat.getMainExecutor(this)
-        biometricPrompt =
-            BiometricPrompt(this@PasswordOverlayActivity, executor, authenticationCallbackInternal)
-
-        val appNameForPrompt = appName.ifEmpty { getString(R.string.this_app) }
-        promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(getString(R.string.unlock_app_title, appNameForPrompt))
-            .setSubtitle(getString(R.string.confirm_biometric_subtitle))
-            .setNegativeButtonText(getString(R.string.use_pin_button))
-            .setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                        BiometricManager.Authenticators.BIOMETRIC_STRONG
-            )
-            .setConfirmationRequired(false)
-            .build()
-    }
-
-    private val authenticationCallbackInternal =
-        object : BiometricPrompt.AuthenticationCallback() {
-            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                super.onAuthenticationError(errorCode, errString)
-                isBiometricPromptShowingLocal = false
-                AppLockManager.reportBiometricAuthFinished()
-                Log.w(TAG, "Authentication error: $errString ($errorCode)")
-            }
-
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                super.onAuthenticationSucceeded(result)
-                isBiometricPromptShowingLocal = false
-                lockedPackageNameFromIntent?.let { pkgName ->
-                    AppLockManager.temporarilyUnlockAppWithBiometrics(pkgName)
-                    // Fix: Do NOT relaunch the app. Just finish the overlay to reveal the underlying activity.
-                    // This preserves the navigation stack/state of the locked app.
-                }
-                finishAfterTransition()
-            }
-        }
-
     override fun onResume() {
         super.onResume()
         movedToBackground = false
