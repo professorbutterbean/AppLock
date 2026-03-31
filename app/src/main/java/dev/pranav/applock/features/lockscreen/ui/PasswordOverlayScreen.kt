@@ -58,20 +58,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executor
 
-class PasswordOverlayActivity : FragmentActivity() {
-    private lateinit var executor: Executor
-    private lateinit var biometricPrompt: BiometricPrompt
-    private lateinit var promptInfo: BiometricPrompt.PromptInfo
-    private lateinit var appLockRepository: AppLockRepository
-    internal var lockedPackageNameFromIntent: String? = null
-    internal var triggeringPackageNameFromIntent: String? = null
-
-    private var isBiometricPromptShowingLocal = false
-    private var movedToBackground = false
-    private var appName: String = ""
-
-    private val TAG = "PasswordOverlayActivity"
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
