@@ -185,19 +185,7 @@ private fun setupUI() {
     }
 
     fun triggerBiometricPrompt() {
-        if (appLockRepository.isBiometricAuthEnabled()) {
-            AppLockManager.reportBiometricAuthStarted()
-            isBiometricPromptShowingLocal = true
-            try {
-                biometricPrompt.authenticate(promptInfo)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error calling biometricPrompt.authenticate: ${e.message}", e)
-                isBiometricPromptShowingLocal = false
-                AppLockManager.reportBiometricAuthFinished()
-            }
-        }
-    }
-
+    
     override fun onPause() {
         super.onPause()
         if (!isChangingConfigurations() && !isBiometricPromptShowingLocal && !movedToBackground) {
