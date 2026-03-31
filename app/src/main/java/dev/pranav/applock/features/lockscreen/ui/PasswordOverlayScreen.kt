@@ -81,11 +81,6 @@ import java.util.concurrent.Executor
         loadAppNameAndSetupUI()
     }
 
-    override fun onPostCreate(savedInstanceState: Bundle?) {
-        super.onPostCreate(savedInstanceState)
-        setupBiometricPromptInternal()
-    }
-
     override fun onPostResume() {
         super.onPostResume()
         setupBiometricPromptInternal()
